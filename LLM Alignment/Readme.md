@@ -27,45 +27,48 @@ This is an overview of the concept of alignment for Large Language Models (LLMs)
     1- Fine-tuning a pre-trained LM with supervised learning on high-quality data for the downstream task of interest (summarization, etc.), to obtain a policy model $\pi_{SFT}$
     2- Reward Modelling Phase
 
-$$p^*\left(y_1 \succ y_2 \mid x\right)=\frac{\exp \left(r^*\left(x, y_1\right)\right)}{\exp \left(r^*\left(x, y_1\right)\right)+\exp \left(r^*\left(x, y_2\right)\right)}$$
+```math
+p^*\left(y_1 \succ y_2 \mid x\right)=\frac{\exp \left(r^*\left(x, y_1\right)\right)}{\exp \left(r^*\left(x, y_1\right)\right)+\exp \left(r^*\left(x, y_2\right)\right)}
+```
 
 ```math
 \mathcal{L}_R\left(r_\phi, \mathcal{D}\right)=-\mathbb{E}_{\left(x, y_w, y_l\right) \sim \mathcal{D}}\left[\log \sigma\left(r_\phi\left(x, y_w\right)-r_\phi\left(x, y_l\right)\right)\right]
 ```
 
     3- RL Fine-Tuning Phase
-    ```math
-        \max _{\pi_\theta} \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi_\theta(y \mid x)}\left[r_\phi(x, y)\right]-\beta \mathbb{D}_{\mathrm{KL}}\left[\pi_\theta(y \mid x) \| \pi_{\mathrm{ref}}(y \mid x)\right]
-    ``` 
-    - By maximizing the reward using PPO algorithm 
-     ```math
-        r(x, y)=r_\phi(x, y)-\beta\left(\log \pi_\theta(y \mid x)-\log	\pi_{\mathrm{ref}}(y \mid x)\right)
-     ```
+```math
+\max _{\pi_\theta} \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi_\theta(y \mid x)}\left[r_\phi(x, y)\right]-\beta \mathbb{D}_{\mathrm{KL}}\left[\pi_\theta(y \mid x) \| \pi_{\mathrm{ref}}(y \mid x)\right]
+``` 
+- By maximizing the reward using PPO algorithm 
+```math
+r(x, y)=r_\phi(x, y)-\beta\left(\log \pi_\theta(y \mid x)-\log	\pi_{\mathrm{ref}}(y \mid x)\right)
+```
  ---
  
 ### DPO
 - Implicit reward
     - DPO starts with the same RL objective of RLHF and after some math, expresses the human preference data in terms of only policy model instead of reward model.
 
-    ```math
-		\pi_r(y \mid x) = \frac{1}{Z(x)} \pi_{\mathrm{ref}}(y \mid x) \exp 	\left(\frac{1}{\beta} r(x, y)\right)
-    ```
-    ```math
-    		\Rightarrow r(x, y) = \beta \log \frac{\pi_r(y \mid 	x)}{\pi_{\text{ref}}(y \mid x)} + \beta \log Z(x), \ Z(x)= \sum_y \pi_{\mathrm{ref}}(y \mid x) \exp \left(\frac{1}{\beta} r(x, y)\right) 
-    ```
-    ```math
-    \mathcal{L}_{\mathrm{DPO}}\left(\pi_\theta ; 	\pi_{\mathrm{ref}}\right)=-\mathbb{E}_{\left(x, y_w, y_l\right) \sim \mathcal{D}}\left[\log \sigma\left(\beta \log \frac{\pi_\theta\left(y_w \mid x\right)}{\pi_{\mathrm{ref}}\left(y_w \mid x\right)}-\beta \log \frac{\pi_\theta\left(y_l \mid x\right)}{\pi_{\mathrm{ref}}\left(y_l \mid x\right)}\right)\right]
-    ```
+```math
+\pi_r(y \mid x) = \frac{1}{Z(x)} \pi_{\mathrm{ref}}(y \mid x) \exp 	\left(\frac{1}{\beta} r(x, y)\right)
+```
+```math
+\Rightarrow r(x, y) = \beta \log \frac{\pi_r(y \mid 	x)}{\pi_{\text{ref}}(y \mid x)} + \beta \log Z(x), \ Z(x)= \sum_y \pi_{\mathrm{ref}}(y \mid x) \exp \left(\frac{1}{\beta} r(x, y)\right) 
+```
+```math
+\mathcal{L}_{\mathrm{DPO}}\left(\pi_\theta ; 	\pi_{\mathrm{ref}}\right)=-\mathbb{E}_{\left(x, y_w, y_l\right) \sim \mathcal{D}}\left[\log \sigma\left(\beta \log \frac{\pi_\theta\left(y_w \mid x\right)}{\pi_{\mathrm{ref}}\left(y_w \mid x\right)}-\beta \log \frac{\pi_\theta\left(y_l \mid x\right)}{\pi_{\mathrm{ref}}\left(y_l \mid x\right)}\right)\right]
+```
 - DPO update
 
-    ```math
-    \nabla_\theta \mathcal{L}_{\mathrm{DPO}}\left(\pi_\theta ; \pi_{\mathrm{ref}}\right)=
-    				-\beta \mathbb{E}_{\left(x, y_w, y_l\right) \sim \mathcal{D}} [\underbrace{\sigma\left(\hat{r}_\theta\left(x, y_l\right)-\hat{r}_\theta\left(x, y_w\right)\right)}_{\text {higher weight when reward estimate is wrong }}[\underbrace{\nabla_\theta \log \pi\left(y_w \mid x\right)}_{\text {increase likelihood of } y_w}-\underbrace{\nabla_\theta \log \pi\left(y_l \mid x\right)}_{\text {decrease likelihood of } y_l}]]
-    ```
+```math
+\nabla_\theta \mathcal{L}_{\mathrm{DPO}}\left(\pi_\theta ; \pi_{\mathrm{ref}}\right)= -\beta \mathbb{E}_{\left(x, y_w, y_l\right) \sim \mathcal{D}} [\underbrace{\sigma\left(\hat{r}_\theta\left(x, y_l\right)-\hat{r}_\theta\left(x, y_w\right)\right)}_{\text {higher weight when reward estimate is wrong }}[\underbrace{\nabla_\theta \log \pi\left(y_w \mid x\right)}_{\text {increase likelihood of } y_w}-\underbrace{\nabla_\theta \log \pi\left(y_l \mid x\right)}_{\text {decrease likelihood of } y_l}]]
+```
 - When $\pi_{SFT}$ is not available, $\pi_{ref}$ can be initialized by maximizing likelihood of preferred completions $(x,y_w)$
-    ```math
-    \pi_{\mathrm{ref}}=\arg \max _\pi \mathbb{E}_{x, y_w \sim \mathcal{D}}\left[\log \pi\left(y_w \mid x\right)\right]
-    ```
+
+```math
+\pi_{\mathrm{ref}}=\arg \max _\pi \mathbb{E}_{x, y_w \sim \mathcal{D}}\left[\log \pi\left(y_w \mid x\right)\right]
+```
+
 - Below, the performace of DPO has been shown for summarization task  (right figure) and sentiment generation task (left figure). DPO perform better in summarization task even at the worst temperature values. It also has superior perforamce in sentiment generation task, especially for lower values of KL which is of more importance.
 
 | Performance of DPO [^2] |
