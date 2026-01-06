@@ -27,21 +27,21 @@ This is an overview of the concept of alignment for Large Language Models (LLMs)
   1. Fine-tuning a pre-trained LM with supervised learning on high-quality data for the downstream task of interest (summarization, etc.), to obtain a policy model $\pi_{\text{SFT}}$
   2. Reward Modeling Phase
 
-     $$
-     p^*(y_1 \succ y_2 \mid x)
-     = \frac{\exp\!\left(r^*(x, y_1)\right)}
-     {\exp\!\left(r^*(x, y_1)\right) + \exp\!\left(r^*(x, y_2)\right)}
-     $$
+$$
+p^*(y_1 \succ y_2 \mid x)
+= \frac{\exp\!\left(r^*(x, y_1)\right)}
+{\exp\!\left(r^*(x, y_1)\right) + \exp\!\left(r^*(x, y_2)\right)}
+$$
 
-     $$
-     \mathcal{L}_R(r_\phi, \mathcal{D})
-     = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}}
-     \left[
-     \log \sigma\!\left(
-     r_\phi(x, y_w) - r_\phi(x, y_l)
-     \right)
-     \right]
-     $$
+$$
+\mathcal{L}_R(r_\phi, \mathcal{D})
+= -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}}
+\left[
+\log \sigma\!\left(
+r_\phi(x, y_w) - r_\phi(x, y_l)
+\right)
+\right]
+$$
 
   3. RL Fine-Tuning Phase
 
