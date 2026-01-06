@@ -27,14 +27,24 @@ This is an overview of the concept of alignment for Large Language Models (LLMs)
   1. Fine-tuning a pre-trained LM with supervised learning on high-quality data for the downstream task of interest (summarization, etc.), to obtain a policy model $\pi_{\text{SFT}}$
   2. Reward Modeling Phase
 
-```math
-p^*\left(y_1 \succ y_2 \mid x\right)=\frac{\exp \left(r^*\left(x, y_1\right)\right)}{\exp \left(r^*\left(x, y_1\right)\right)+\exp \left(r^*\left(x, y_2\right)\right)}
-```
+     $$
+     p^*(y_1 \succ y_2 \mid x)
+     = \frac{\exp\!\left(r^*(x, y_1)\right)}
+     {\exp\!\left(r^*(x, y_1)\right) + \exp\!\left(r^*(x, y_2)\right)}
+     $$
 
-```math
-\mathcal{L}_R\left(r_\phi, \mathcal{D}\right)=-\mathbb{E}_{\left(x, y_w, y_l\right) \sim \mathcal{D}}\left[\log \sigma\left(r_\phi\left(x, y_w\right)-r_\phi\left(x, y_l\right)\right)\right]
-```
+     $$
+     \mathcal{L}_R(r_\phi, \mathcal{D})
+     = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}}
+     \left[
+     \log \sigma\!\left(
+     r_\phi(x, y_w) - r_\phi(x, y_l)
+     \right)
+     \right]
+     $$
+
   3. RL Fine-Tuning Phase
+
     
 ```math
 \max _{\pi_\theta} \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi_\theta(y \mid x)}\left[r_\phi(x, y)\right]-\beta \mathbb{D}_{\mathrm{KL}}\left[\pi_\theta(y \mid x) \| \pi_{\mathrm{ref}}(y \mid x)\right]
